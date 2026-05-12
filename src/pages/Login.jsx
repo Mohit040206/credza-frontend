@@ -18,6 +18,9 @@ export default function Login() {
       const response = await api.post('/auth/login', { phone, password });
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
+        if (response.data.shopName) {
+          localStorage.setItem('shopName', response.data.shopName);
+        }
         navigate('/');
       }
     } catch (err) {

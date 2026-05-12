@@ -2,18 +2,36 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import CustomerModal from '../components/CustomerModal';
-import { LogOut, Plus, MapPin, Phone, Users } from 'lucide-react';
+import ProfileModal from '../components/ProfileModal';
+import { LogOut, Plus, MapPin, Phone, Users, UserCircle } from 'lucide-react';
 
 export default function Dashboard() {
   const [customers, setCustomers] = useState([]);
+  const [shopName, setShopName] = useState(localStorage.getItem('shopName') || '');
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchCustomers();
+    if (!shopName) {
+      fetchOwnerProfile();
+    }
   }, []);
+
+  const fetchOwnerProfile = async () => {
+    try {
+      const res = await api.get('/auth/me');
+      if (res.data && res.data.data && res.data.data.shopName) {
+        setShopName(res.data.data.shopName);
+        localStorage.setItem('shopName', res.data.data.shopName);
+      }
+    } catch (err) {
+      console.error('Failed to fetch owner profile:', err);
+    }
+  };
 
   const fetchCustomers = async () => {
     try {
@@ -65,17 +83,32 @@ export default function Dashboard() {
             <Users className="w-6 h-6 text-blue-600" />
             <h1 className="text-xl font-bold text-gray-900">Credza</h1>
           </div>
-          <button 
-            onClick={handleLogout}
-            className="text-gray-500 hover:text-gray-900 flex items-center gap-2 text-sm font-medium transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            <span className="hidden sm:inline">Logout</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsProfileOpen(true)}
+              className="text-gray-500 hover:text-blue-600 flex items-center gap-1.5 text-sm font-medium transition-colors"
+              title="My Profile"
+            >
+              <UserCircle className="w-5 h-5" />
+              <span className="hidden sm:inline">Profile</span>
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="text-gray-500 hover:text-gray-900 flex items-center gap-2 text-sm font-medium transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="max-w-5xl mx-auto px-4 mt-8">
+        {shopName && (
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-extrabold text-blue-900 tracking-tight bg-gradient-to-r from-blue-700 to-indigo-800 text-transparent bg-clip-text drop-shadow-sm">{shopName}</h1>
+          </div>
+        )}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-800">Customers</h2>
           <button 
@@ -145,6 +178,13 @@ export default function Dashboard() {
           onClose={() => setIsModalOpen(false)}
           onSave={handleSaveCustomer}
           initialData={editingCustomer}
+        />
+      )}
+
+      {isProfileOpen && (
+        <ProfileModal
+          onClose={() => setIsProfileOpen(false)}
+          customerCount={customers.length}
         />
       )}
     </div>

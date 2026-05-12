@@ -1,5 +1,10 @@
 import { X, TrendingUp, TrendingDown, Clock } from 'lucide-react';
 
+const getUnitLabel = (unit) => {
+  const labels = { piece: 'pc', kg: 'kg', gram: 'g', liter: 'L' };
+  return labels[unit] || 'pc';
+};
+
 export default function EntryDetailsModal({ entry, onClose }) {
   if (!entry) return null;
 
@@ -68,21 +73,33 @@ export default function EntryDetailsModal({ entry, onClose }) {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Unit Price</th>
                       <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Qty</th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Price</th>
                       <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {entry.products.map((p, idx) => (
-                      <tr key={idx}>
-                        <td className="px-4 py-2 text-sm text-gray-900">{p.name}</td>
-                        <td className="px-4 py-2 text-sm text-gray-600 text-right">{p.qty}</td>
-                        <td className="px-4 py-2 text-sm text-gray-600 text-right">₹{p.price}</td>
-                        <td className="px-4 py-2 text-sm text-gray-900 font-medium text-right">₹{p.qty * p.price}</td>
-                      </tr>
-                    ))}
+                    {entry.products.map((p, idx) => {
+                      const unit = p.unit || 'piece';
+                      const unitLabel = getUnitLabel(unit);
+                      return (
+                        <tr key={idx}>
+                          <td className="px-4 py-2 text-sm text-gray-900">{p.name}</td>
+                          <td className="px-4 py-2 text-sm text-gray-600 text-right">₹{p.price}/{unitLabel}</td>
+                          <td className="px-4 py-2 text-sm text-gray-600 text-right">{p.qty} {unitLabel}</td>
+                          <td className="px-4 py-2 text-sm text-gray-900 font-medium text-right">₹{(p.qty * p.price).toFixed(2)}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
+                  <tfoot className="bg-gray-50">
+                    <tr>
+                      <td colSpan="3" className="px-4 py-2 text-sm font-semibold text-gray-700 text-right">Total</td>
+                      <td className="px-4 py-2 text-sm font-bold text-gray-900 text-right">
+                        {formatCurrency(entry.products.reduce((sum, p) => sum + (p.qty * p.price), 0))}
+                      </td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
             </div>

@@ -214,7 +214,10 @@ export default function Ledger() {
                     )}
                     {entry.products && entry.products.length > 0 && (
                       <div className="mt-2 text-sm text-gray-500">
-                        Products: {entry.products.map(p => `${p.name} (${p.qty})`).join(', ')}
+                        Products: {entry.products.map(p => {
+                          const unitLabel = { piece: 'pc', kg: 'kg', gram: 'g', liter: 'L' }[p.unit || 'piece'] || 'pc';
+                          return `${p.name} (${p.qty} ${unitLabel})`;
+                        }).join(', ')}
                       </div>
                     )}
                   </div>

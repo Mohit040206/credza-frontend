@@ -1,15 +1,27 @@
 import { useState } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 
+const UNIT_OPTIONS = [
+  { value: 'piece', label: 'Piece' },
+  { value: 'kg', label: 'Kg' },
+  { value: 'gram', label: 'Gram' },
+  { value: 'liter', label: 'Liter' },
+];
+
+const getUnitLabel = (unit) => {
+  const labels = { piece: 'pc', kg: 'kg', gram: 'g', liter: 'L' };
+  return labels[unit] || 'pc';
+};
+
 export default function AddEntryModal({ onClose, onSave }) {
   const [type, setType] = useState('credit');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
-  const [products, setProducts] = useState([{ name: '', price: '', qty: 1 }]);
+  const [products, setProducts] = useState([{ name: '', price: '', qty: 1, unit: 'piece' }]);
   const [loading, setLoading] = useState(false);
 
   const handleAddProduct = () => {
-    setProducts([...products, { name: '', price: '', qty: 1 }]);
+    setProducts([...products, { name: '', price: '', qty: 1, unit: 'piece' }]);
   };
 
   const handleRemoveProduct = (index) => {
@@ -107,16 +119,18 @@ export default function AddEntryModal({ onClose, onSave }) {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                       />
                       <div className="flex gap-2">
-                        <input
-                          type="number"
-                          value={product.price}
-                          onChange={(e) => handleProductChange(index, 'price', e.target.value)}
-                          required
-                          min="0"
-                          step="0.01"
-                          placeholder="Price"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                        />
+                        <div className="flex-1">
+                          <input
+                            type="number"
+                            value={product.price}
+                            onChange={(e) => handleProductChange(index, 'price', e.target.value)}
+                            required
+                            min="0"
+                            step="0.01"
+                            placeholder={`Price per ${getUnitLabel(product.unit)}`}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                          />
+                        </div>
                         <input
                           type="number"
                           value={product.qty}
@@ -125,8 +139,21 @@ export default function AddEntryModal({ onClose, onSave }) {
                           min="0.01"
                           step="any"
                           placeholder="Qty"
-                          className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                          className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                         />
+                        <select
+                          value={product.unit}
+                          onChange={(e) => handleProductChange(index, 'unit', e.target.value)}
+                          className="w-24 px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                        >
+                          {UNIT_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      {/* Show line total */}
+                      <div className="text-right text-xs text-gray-500">
+                        = ₹{((parseFloat(product.price) || 0) * (parseFloat(product.qty) || 0)).toFixed(2)}
                       </div>
                     </div>
                     {products.length > 1 && (
