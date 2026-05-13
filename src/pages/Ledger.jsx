@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import api from '../services/api';
 import AddEntryModal from '../components/AddEntryModal';
 import EntryDetailsModal from '../components/EntryDetailsModal';
+import ConfirmModal from '../components/ConfirmModal';
 import { ArrowLeft, Download, MessageCircle, TrendingUp, TrendingDown, Clock } from 'lucide-react';
 
 const getTodayStr = () => new Date().toISOString().split('T')[0];
@@ -20,6 +21,7 @@ export default function Ledger() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
+  const [entryToDelete, setEntryToDelete] = useState(null);
   const [startDate, setStartDate] = useState(getOneMonthAgoStr());
   const [endDate, setEndDate] = useState(getTodayStr());
 
@@ -57,7 +59,27 @@ export default function Ledger() {
     }
   };
 
+  const handleDeleteEntry = (entryId) => {
+    setEntryToDelete(entryId);
+  };
+
+  const confirmDelete = async () => {
+    if (!entryToDelete) return;
+    
+    try {
+      await api.delete(`/ledger/${entryToDelete}`);
+      fetchLedger();
+      setSelectedEntry(null);
+      setEntryToDelete(null);
+      toast.success('Entry deleted successfully');
+    } catch (err) {
+      console.error('Failed to delete entry:', err);
+      toast.error('Failed to delete entry. Please try again.');
+    }
+  };
+
   const handleDownloadPDF = async () => {
+
     if (!ledger?.entries || ledger.entries.length === 0) {
       toast.error('No transactions found in the selected date range.');
       return;
@@ -149,30 +171,30 @@ export default function Ledger() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 mt-6">
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 mb-8 text-center">
-          <p className="text-gray-500 text-sm font-medium uppercase tracking-wider mb-1">Final Balance</p>
-          <div className={`text-4xl font-bold ${ledger?.finalBalance > 0 ? 'text-red-600' : ledger?.finalBalance < 0 ? 'text-green-600' : 'text-gray-900'}`}>
+        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200 mb-6 sm:mb-8 text-center">
+          <p className="text-gray-500 text-xs sm:text-sm font-medium uppercase tracking-wider mb-1">Final Balance</p>
+          <div className={`text-2xl sm:text-4xl font-bold ${ledger?.finalBalance > 0 ? 'text-red-600' : ledger?.finalBalance < 0 ? 'text-green-600' : 'text-gray-900'}`}>
             {formatCurrency(Math.abs(ledger?.finalBalance || 0))}
-            {ledger?.finalBalance > 0 && <span className="text-sm font-medium ml-2 text-red-500 block sm:inline mt-1 sm:mt-0">To Receive</span>}
-            {ledger?.finalBalance < 0 && <span className="text-sm font-medium ml-2 text-green-500 block sm:inline mt-1 sm:mt-0">To Pay</span>}
+            {ledger?.finalBalance > 0 && <span className="text-xs sm:text-sm font-medium ml-1 sm:ml-2 text-red-500 block mt-1">To Receive</span>}
+            {ledger?.finalBalance < 0 && <span className="text-xs sm:text-sm font-medium ml-1 sm:ml-2 text-green-500 block mt-1">To Pay</span>}
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
           <h2 className="text-lg font-bold text-gray-800">Transactions</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <input 
               type="date" 
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600 transition-colors"
+              className="flex-1 sm:flex-none min-w-0 px-2 sm:px-3 py-1.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600 transition-colors"
             />
             <span className="text-gray-400 text-sm">to</span>
             <input 
               type="date" 
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600 transition-colors"
+              className="flex-1 sm:flex-none min-w-0 px-2 sm:px-3 py-1.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600 transition-colors"
             />
             {(startDate || endDate) && (
               <button 
@@ -195,25 +217,25 @@ export default function Ledger() {
               <div 
                 key={entry._id || index} 
                 onClick={() => setSelectedEntry(entry)}
-                className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between cursor-pointer hover:bg-blue-50/50 hover:border-blue-200 transition-all"
+                className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between gap-2 cursor-pointer hover:bg-blue-50/50 hover:border-blue-200 transition-all"
               >
-                <div className="flex gap-3">
-                  <div className={`mt-1 p-2 rounded-full ${entry.type === 'credit' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                <div className="flex gap-2 sm:gap-3 min-w-0 flex-1">
+                  <div className={`mt-1 p-1.5 sm:p-2 rounded-full shrink-0 ${entry.type === 'credit' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
                     {entry.type === 'credit' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                   </div>
-                  <div>
-                    <div className="font-semibold text-gray-900 capitalize text-base">
+                  <div className="min-w-0">
+                    <div className="font-semibold text-gray-900 capitalize text-sm sm:text-base">
                       {entry.type === 'credit' ? 'Given (Credit)' : 'Received (Debit)'}
                     </div>
                     <div className="text-gray-500 flex items-center text-xs mt-1">
-                      <Clock className="w-3 h-3 mr-1" />
-                      {formatDate(entry.createdAt || new Date())}
+                      <Clock className="w-3 h-3 mr-1 shrink-0" />
+                      <span className="truncate">{formatDate(entry.createdAt || new Date())}</span>
                     </div>
                     {entry.note && (
-                      <div className="text-gray-600 text-sm mt-2">{entry.note}</div>
+                      <div className="text-gray-600 text-xs sm:text-sm mt-2 line-clamp-2">{entry.note}</div>
                     )}
                     {entry.products && entry.products.length > 0 && (
-                      <div className="mt-2 text-sm text-gray-500">
+                      <div className="mt-2 text-xs sm:text-sm text-gray-500 truncate">
                         Products: {entry.products.map(p => {
                           const unitLabel = { piece: 'pc', kg: 'kg', gram: 'g', liter: 'L' }[p.unit || 'piece'] || 'pc';
                           return `${p.name} (${p.qty} ${unitLabel})`;
@@ -222,7 +244,7 @@ export default function Ledger() {
                     )}
                   </div>
                 </div>
-                <div className={`font-bold text-lg ${entry.type === 'credit' ? 'text-red-600' : 'text-green-600'}`}>
+                <div className={`font-bold text-sm sm:text-lg shrink-0 whitespace-nowrap ${entry.type === 'credit' ? 'text-red-600' : 'text-green-600'}`}>
                   {entry.type === 'credit' ? '+' : '-'}{formatCurrency(entry.totalAmount)}
                 </div>
               </div>
@@ -253,7 +275,19 @@ export default function Ledger() {
       <EntryDetailsModal 
         entry={selectedEntry} 
         onClose={() => setSelectedEntry(null)} 
+        onDelete={handleDeleteEntry}
       />
+
+      {entryToDelete && (
+        <ConfirmModal 
+          title="Delete Entry"
+          message="Are you sure you want to delete this entry? This action cannot be undone."
+          onConfirm={confirmDelete}
+          onCancel={() => setEntryToDelete(null)}
+          confirmText="Delete"
+          type="danger"
+        />
+      )}
     </div>
   );
 }

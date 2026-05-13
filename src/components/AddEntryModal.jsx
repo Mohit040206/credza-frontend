@@ -109,7 +109,7 @@ export default function AddEntryModal({ onClose, onSave }) {
                 
                 {products.map((product, index) => (
                   <div key={index} className="bg-gray-50 p-3 rounded-lg border border-gray-200 flex gap-2 items-start relative">
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 space-y-2 min-w-0">
                       <input
                         type="text"
                         value={product.name}
@@ -118,19 +118,19 @@ export default function AddEntryModal({ onClose, onSave }) {
                         placeholder="Item name"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                       />
+                      {/* Price — full width */}
+                      <input
+                        type="number"
+                        value={product.price}
+                        onChange={(e) => handleProductChange(index, 'price', e.target.value)}
+                        required
+                        min="0"
+                        step="0.01"
+                        placeholder={`Price per ${getUnitLabel(product.unit)}`}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      />
+                      {/* Qty + Unit — always side-by-side, never clipped */}
                       <div className="flex gap-2">
-                        <div className="flex-1">
-                          <input
-                            type="number"
-                            value={product.price}
-                            onChange={(e) => handleProductChange(index, 'price', e.target.value)}
-                            required
-                            min="0"
-                            step="0.01"
-                            placeholder={`Price per ${getUnitLabel(product.unit)}`}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                          />
-                        </div>
                         <input
                           type="number"
                           value={product.qty}
@@ -139,12 +139,12 @@ export default function AddEntryModal({ onClose, onSave }) {
                           min="0.01"
                           step="any"
                           placeholder="Qty"
-                          className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                          className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                         />
                         <select
                           value={product.unit}
                           onChange={(e) => handleProductChange(index, 'unit', e.target.value)}
-                          className="w-24 px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                          className="w-24 shrink-0 px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
                         >
                           {UNIT_OPTIONS.map((opt) => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
